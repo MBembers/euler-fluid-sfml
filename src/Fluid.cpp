@@ -202,7 +202,7 @@ float Fluid::sampleField(float x, float y, FieldType fieldType) {
       w_y1 * w_x0 * c[y1 * size_x + x0].v +
       w_y1 * w_x1 * c[y1 * size_x + x1].v;
   }
-  if(fieldType == S) {
+  else {
     return w_y0 * w_x0 * c[y0 * size_x + x0].s +
       w_y0 * w_x1 * c[y0 * size_x + x1].s +
       w_y1 * w_x0 * c[y1 * size_x + x0].s +

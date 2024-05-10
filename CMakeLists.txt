@@ -10,7 +10,7 @@ FetchContent_Declare(SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(euler-fluid src/main.cpp)
+add_executable(euler-fluid src/main.cpp src/Fluid.cpp)
 target_link_libraries(euler-fluid PRIVATE sfml-graphics)
 target_compile_features(euler-fluid PRIVATE cxx_std_17)
 

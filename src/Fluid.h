@@ -9,14 +9,14 @@ private:
   enum FieldType {U, V, S};
 
   struct FluidCell {
-    float k = 0; // 0 - solid, 1 - fluid
-    float u = 0; // vertical velocity
-    float v = 0; // horizontal velocity
-    float u_new = 0;
-    float v_new = 0;
-    float p = 0; // pressure
-    float s = 0; // smoke amount
-    float s_new = 0; 
+    float k; // 0 - solid, 1 - fluid
+    float u; // vertical velocity
+    float v; // horizontal velocity
+    float u_new;
+    float v_new;
+    float p; // pressure
+    float s; // smoke amount
+    float s_new; 
 
     void print() {
       std::cout << "k: " << k << ", u: " << u << ", v: " << v << ", p: " << p << ", s: " << s << "\n";

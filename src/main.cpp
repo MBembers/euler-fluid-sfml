@@ -5,8 +5,8 @@
 
 int main()
 {
-  int width = 800;
-  int height = 500;
+  int width = 1000;
+  int height = 700;
   float ratio = (float)height / (float)width;
   float h = 0.02;
   float sim_width = 2;
@@ -42,15 +42,16 @@ int main()
 
     fluid.simulate();
     // drawing stuff
-    // window.clear(sf::Color::White);
+    window.clear(sf::Color::Green);
     sf::Image image;
     sf::Uint8* pixels = new sf::Uint8[width * height * 4];
-    // fluid.get_pixel_array(width, height, pixels);
-    // image.create(width, height, pixels);
-    // sf::Texture texture;
-    // texture.loadFromImage(image);
-    // sf::Sprite sprite(texture);
-    // window.draw(sprite);
+    fluid.get_pixel_array(width, height, pixels);
+    image.create(width, height, pixels);
+    sf::Texture texture;
+    texture.loadFromImage(image);
+    
+    sf::Sprite sprite(texture);
+    window.draw(sprite);
     window.display();
   }
 

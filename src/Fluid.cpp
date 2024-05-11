@@ -12,8 +12,11 @@ Fluid::Fluid(unsigned int size_x, unsigned int size_y, float density, float h, f
   _h = 1.0 / h;
   _h2 = h / 2.0;
   sc = std::floor(scale * h);
-  c = std::vector<FluidCell>(count);
+  c.reserve(count);
   print();
+  FluidCell test_c = FluidCell();
+  test_c.k = 1;
+  test_c.print();
   setupCells();
 }
 
@@ -231,7 +234,7 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
 
       // if (scene.showPressure) colors = colorGradient(p, minP, maxP);
       if (k == 0) {
-        colors[1] = 200;
+        colors[1] = 100;
         colors[2] = 200;
         colors[0] = 200;
       } else if (true) {
@@ -242,8 +245,7 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
 
       float x = j * sc; // in pixels
       float y = i * sc; // in pixels
-      // if (i == size_y - 1 && j == size_x - 1)
-      //     console.log(x, y);
+
       // process every pixel in a square at position (x,y), square size is h (meters) irl, h * scale on screen (pixels)
       for (int yp = y; yp < y + sc; yp++) {
         int index = (x + yp * width) * 4;
@@ -254,17 +256,6 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
           pixels[index++] = 255;
         }
       }
-    }
-  }
-
-
-  for (int i = 0; i < width; i++){
-    for (int j = 0; j < height; j++)
-    {
-      pixels[(i + j * width) * 4] = 200;
-      pixels[(i + j * width) * 4 + 1] = 255;
-      pixels[(i + j * width) * 4 + 2] = 255;
-      pixels[(i + j * width) * 4 + 3] = 255;
     }
   }
 }
@@ -291,7 +282,12 @@ void Fluid::setupCells() {
         new_cell.k = 1;
       }
 
-      if (j == 1) {
+      if (j > size_x / 2 && j < size_x / 2 + 10 && i > size_y / 2 && i < size_y / 2 + 10)
+      {
+        new_cell.k = 0;
+      }      
+
+      if (j == 1 || j == 0) {
         new_cell.v = initial_velocity;
         new_cell.s = 1.0;
 			}
@@ -302,14 +298,15 @@ void Fluid::setupCells() {
 
 void Fluid::simulate() {
   // this->extrapolate();
-  this->projection();
-  this->advection();
+  projection();
+  advection();
 }
 
 void Fluid::print() {
   std::cout << "Printing data\n";
   std::cout << "Size x: " << size_x << ", Size y: " << size_y << "\n";
-  std::cout << "Count: " << count << ", h: " << h << "\n";
+  std::cout << "Count: " << count << ", h: " << h << ", sc: " << sc << "\n";
+  std::cout << "Density: " << density << ", dt: " << dt << "\n";
 }
 
 Fluid::~Fluid() {}

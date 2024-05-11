@@ -1,16 +1,19 @@
 #include "Fluid.h"
 #include <cmath>
+#include <iostream>
 
-Fluid::Fluid(unsigned int size_x, unsigned int size_y, float density, float h, float dt){
+Fluid::Fluid(unsigned int size_x, unsigned int size_y, float density, float h, float scale, float dt){
   this->size_x = size_x;
   this->size_y = size_y;
   this->count = size_x * size_y;
   this->density = density;
   this->h = h;
-  this->_h = 1.0 / h;
-  this->_h2 = h / 2.0;
   this->dt = dt; 
+  _h = 1.0 / h;
+  _h2 = h / 2.0;
+  sc = std::floor(scale * h);
   c = std::vector<FluidCell>(count);
+  print();
   setupCells();
 }
 
@@ -216,31 +219,83 @@ float Fluid::sampleField(float x, float y, FieldType fieldType) {
   // return sample_weighted;
 }
 
-void Fluid::setupCells() {
-  for (size_t i = 0; i < count; i++) {
-    for (size_t j = 0; j < count; j++) {
-      c[i * size_x + j].k = 1.0;
-      c[i * size_x + j].u = 0.0;
-      c[i * size_x + j].v = 0.0;
-      c[i * size_x + j].s = 0.0;
+void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
+  for (int i = 0; i < size_y; i++) {
+    for (int j = 0; j < size_x; j++) {
+      float p = c[i * size_x + j].p;
+      float u = c[i * size_x + j].u;
+      float v = c[i * size_x + j].v;
+      float s = c[i * size_x + j].s;
+      float k = c[i * size_x + j].k;
+      int colors[3] = {255, 255, 255}; // r, g, b
 
+      // if (scene.showPressure) colors = colorGradient(p, minP, maxP);
+      if (k == 0) {
+        colors[1] = 200;
+        colors[2] = 200;
+        colors[0] = 200;
+      } else if (true) {
+        colors[0] -= s * 255;
+        colors[1] -= s * 255;
+        colors[2] -= s * 255;
+      }
+
+      float x = j * sc; // in pixels
+      float y = i * sc; // in pixels
+      // if (i == size_y - 1 && j == size_x - 1)
+      //     console.log(x, y);
+      // process every pixel in a square at position (x,y), square size is h (meters) irl, h * scale on screen (pixels)
+      for (int yp = y; yp < y + sc; yp++) {
+        int index = (x + yp * width) * 4;
+        for (int xp = x; xp < x + sc; xp++) {
+          pixels[index++] = colors[0];
+          pixels[index++] = colors[1];
+          pixels[index++] = colors[2];
+          pixels[index++] = 255;
+        }
+      }
+    }
+  }
+
+
+  for (int i = 0; i < width; i++){
+    for (int j = 0; j < height; j++)
+    {
+      pixels[(i + j * width) * 4] = 200;
+      pixels[(i + j * width) * 4 + 1] = 255;
+      pixels[(i + j * width) * 4 + 2] = 255;
+      pixels[(i + j * width) * 4 + 3] = 255;
+    }
+  }
+}
+
+void Fluid::setupCells() {
+  std::cout << "Setting up cells\n";
+  for (size_t i = 0; i < size_y; i++) {
+    for (size_t j = 0; j < size_x; j++) {
+      FluidCell new_cell = FluidCell();
+      new_cell.k = 1.0;
+      new_cell.u = 0.0;
+      new_cell.v = 0.0;
+      new_cell.s = 0.0;
       if (i == 0) {
-        c[i * size_x + j].k = 0;
+        new_cell.k = 0;
       }
       if (i == size_y - 1) {
-        c[i * size_x + j].k = 0;
+        new_cell.k = 0;
       }
       if (j == 0) {
-        c[i * size_x + j].k = 0;
+        new_cell.k = 0;
       }
       if (j == size_x - 1) {
-        c[i * size_x + j].k = 1;
+        new_cell.k = 1;
       }
 
       if (j == 1) {
-        c[i * size_x + j].v = initial_velocity;
-        c[i * size_x + j].s = 1.0;
+        new_cell.v = initial_velocity;
+        new_cell.s = 1.0;
 			}
+      c.push_back(new_cell);
     }
   }
 }
@@ -249,6 +304,12 @@ void Fluid::simulate() {
   // this->extrapolate();
   this->projection();
   this->advection();
+}
+
+void Fluid::print() {
+  std::cout << "Printing data\n";
+  std::cout << "Size x: " << size_x << ", Size y: " << size_y << "\n";
+  std::cout << "Count: " << count << ", h: " << h << "\n";
 }
 
 Fluid::~Fluid() {}

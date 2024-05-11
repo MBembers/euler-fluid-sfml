@@ -1,42 +1,58 @@
 #include <SFML/Graphics.hpp>
+#include <cmath>
+#include <iostream>
 #include "Fluid.h"
 
 int main()
 {
-    float width = 800;
-    float height = 500;
-    // create the window
-    sf::RenderWindow window(sf::VideoMode((int) width, (int) height), "Fluid Simulation");
-    // create a clock to track the elapsed time
-    sf::Clock clock;
-    float ratio = height / width;
-    float h = 0.1;
-    float simWidth = 3;
-    float simHeight = simWidth * ratio;
-    float scale = width / simWidth;
-    Fluid fluid(width / scale, height / scale, 1.0, 1.0, 0.1);
+  int width = 800;
+  int height = 500;
+  float ratio = (float)height / (float)width;
+  float h = 0.02;
+  float sim_width = 2;
+  float sim_height = sim_width * ratio;
+  float scale = width / sim_width;
+  float framerate = 30.0;
+  float dt = 1 / framerate;
 
-    // run the main loop
-    while (window.isOpen())
+  Fluid fluid(std::floor(sim_width / h), std::floor(sim_height / h), 1.0, h, scale, dt);
+
+  // create the window
+  sf::RenderWindow window(sf::VideoMode(width, height), "Fluid Simulation");
+  window.setFramerateLimit(framerate);
+  // create a clock to track the elapsed time
+  sf::Clock clock;
+
+  // run the main loop
+  while (window.isOpen())
+  {
+    // handle events
+    sf::Event event;
+    while (window.pollEvent(event))
     {
-        // handle events
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if(event.type == sf::Event::Closed)
-                window.close();
-        }
-
-        // make the particle system emitter follow the mouse
-        // sf::Vector2i mouse = sf::Mouse::getPosition(window);
-
-        // update it
-        sf::Time elapsed = clock.restart();
-
-        // draw it
-        window.clear(sf::Color::White);
-        window.display();
+      if(event.type == sf::Event::Closed)
+        window.close();
     }
 
-    return 0;
+    // make the particle system emitter follow the mouse
+    // sf::Vector2i mouse = sf::Mouse::getPosition(window);
+
+    // update clock
+    sf::Time elapsed = clock.restart();
+
+    fluid.simulate();
+    // drawing stuff
+    // window.clear(sf::Color::White);
+    sf::Image image;
+    sf::Uint8* pixels = new sf::Uint8[width * height * 4];
+    // fluid.get_pixel_array(width, height, pixels);
+    // image.create(width, height, pixels);
+    // sf::Texture texture;
+    // texture.loadFromImage(image);
+    // sf::Sprite sprite(texture);
+    // window.draw(sprite);
+    window.display();
+  }
+
+  return 0;
 }

@@ -80,11 +80,18 @@ void Fluid::projection() {
 }
 
 void Fluid::advection() {
-  for ( auto cell : c ) {
-    cell.u_new = cell.u;
-    cell.v_new = cell.v;
-    cell.s_new = cell.s;
+  for (int i = 0; i < size_y; i++) {
+    for (int j = 0; j < size_x; j++) {
+      if (c[i * size_x + j].k == 1) {
+        c[i * size_x + j].u_new = c[i * size_x + j].u;
+        c[i * size_x + j].v_new = c[i * size_x + j].v;
+        c[i * size_x + j].s_new = c[i * size_x + j].s;
+      }
+    }
   }
+
+  // std::cout << c[3 * size_x + 1].v_new << "\n";
+  // std::cout << c[3 * size_x + 2].v_new << "\n";
 
   for (size_t i = 1; i < size_y - 1; i++) {
     for (size_t j = 1; j < size_x - 1; j++) {
@@ -93,7 +100,7 @@ void Fluid::advection() {
       float x, y;
       // u component advection
       if (
-        c[(i - 1) * size_x + j].k != 0 &&
+        // c[(i - 1) * size_x + j].k != 0 &&
         j < size_x - 1
       ) {
         float u = c[i * size_x + j].u;
@@ -107,16 +114,13 @@ void Fluid::advection() {
         x = j * h + _h2 - v_avg * dt;
         y = i * h - u * dt;
         // calculate advection of velocities with backward euler
-        c[i * size_x + j].u_new = this->sampleField(
-          x,
-          y,
-          U
-        );
+        c[i * size_x + j].u_new = sampleField(x, y, U);
+        
       }
 
       // v component advection
       if (
-        c[i * size_x + j - 1].k != 0.0 &&
+        // c[i * size_x + j - 1].k != 0.0 &&
         i < size_y - 1
       ) {
         float v = c[i * size_x + j].v;
@@ -129,11 +133,8 @@ void Fluid::advection() {
 
         x = j * h - v * dt;
         y = i * h + _h2 - u_avg * dt;
-        c[i * size_x + j].v_new = this->sampleField(
-          x,
-          y,
-          V
-        );
+        
+        c[i * size_x + j].v_new = sampleField(x, y, V);
       }
 
       // smoke advection
@@ -148,11 +149,7 @@ void Fluid::advection() {
           0.5;
         x = j * h + _h2 - dt * v;
         y = i * h + _h2 - dt * u;
-        c[i * size_x + j].s_new = this->sampleField(
-          x,
-          y,
-          S
-        );
+        c[i * size_x + j].s_new = sampleField(x, y, S);
       }
       // let vel = this.calcVelocity(i, j);
       // velSum += vel;
@@ -164,10 +161,15 @@ void Fluid::advection() {
     }
   }
   // this.avg_vel = velSum / ((size_x - 1) * (size_y - 1));
-  for ( auto cell : c ) {
-    cell.u = cell.u_new;
-    cell.v = cell.v_new;
-    cell.s = cell.s_new;
+  for (int i = 0; i < size_y; i++) {
+    for (int j = 0; j < size_x; j++) {
+      if (c[i * size_x + j].k == 1) {
+        c[i * size_x + j].u = c[i * size_x + j].u_new;
+        c[i * size_x + j].v = c[i * size_x + j].v_new;
+        c[i * size_x + j].s = c[i * size_x + j].s_new;
+      }
+    
+    }
   }
 }
 
@@ -186,40 +188,37 @@ float Fluid::sampleField(float x, float y, FieldType fieldType) {
     dx = _h2;
     dy = _h2;
   }
-  float x0 = std::min(std::floor((x - dx) * _h), (float) size_x - 1);
-  float y0 = std::min(std::floor((y - dy) * _h), (float) size_y - 1);
-  float x1 = std::min(x0 + 1, (float) size_x - 1);
-  float y1 = std::min(y0 + 1, (float) size_y - 1);
+  int x0 = std::min((int)std::floor((x - dx) * _h), size_x - 1);
+  int y0 = std::min((int)std::floor((y - dy) * _h), size_y - 1);
+  int x1 = std::min(x0 + 1, size_x - 1);
+  int y1 = std::min(y0 + 1, size_y - 1);
 
   float w_x1 = (x - dx - x0 * h) * _h;
   float w_x0 = 1 - w_x1;
   float w_y1 = (y - dy - y0 * h) * _h;
   float w_y0 = 1 - w_y1;
 
+  float sample_weighted = 0;
   if(fieldType == U) {
-    return w_y0 * w_x0 * c[y0 * size_x + x0].u +
+    sample_weighted = w_y0 * w_x0 * c[y0 * size_x + x0].u +
       w_y0 * w_x1 * c[y0 * size_x + x1].u +
       w_y1 * w_x0 * c[y1 * size_x + x0].u +
       w_y1 * w_x1 * c[y1 * size_x + x1].u;
   }
   if(fieldType == V) {
-    return w_y0 * w_x0 * c[y0 * size_x + x0].v +
+    sample_weighted = w_y0 * w_x0 * c[y0 * size_x + x0].v +
       w_y0 * w_x1 * c[y0 * size_x + x1].v +
       w_y1 * w_x0 * c[y1 * size_x + x0].v +
       w_y1 * w_x1 * c[y1 * size_x + x1].v;
   }
   else {
-    return w_y0 * w_x0 * c[y0 * size_x + x0].s +
+    sample_weighted = w_y0 * w_x0 * c[y0 * size_x + x0].s +
       w_y0 * w_x1 * c[y0 * size_x + x1].s +
       w_y1 * w_x0 * c[y1 * size_x + x0].s +
       w_y1 * w_x1 * c[y1 * size_x + x1].s;
   }
-  // float sample_weighted =
-  //   w_y0 * w_x0 * f[y0 * size_x + x0] +
-  //   w_y0 * w_x1 * f[y0 * size_x + x1] +
-  //   w_y1 * w_x0 * f[y1 * size_x + x0] +
-  //   w_y1 * w_x1 * f[y1 * size_x + x1];
-  // return sample_weighted;
+  // std::cout << sample_weighted << "\n";
+  return sample_weighted;
 }
 
 void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
@@ -241,6 +240,10 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
         colors[0] -= s * 255;
         colors[1] -= s * 255;
         colors[2] -= s * 255;
+
+        if (colors[0] < 0) colors[0] = 0;
+        if (colors[1] < 0) colors[1] = 0;
+        if (colors[2] < 0) colors[2] = 0;
       }
 
       float x = j * sc; // in pixels
@@ -265,10 +268,6 @@ void Fluid::setupCells() {
   for (size_t i = 0; i < size_y; i++) {
     for (size_t j = 0; j < size_x; j++) {
       FluidCell new_cell = FluidCell();
-      new_cell.k = 1.0;
-      new_cell.u = 0.0;
-      new_cell.v = 0.0;
-      new_cell.s = 0.0;
       if (i == 0) {
         new_cell.k = 0;
       }
@@ -282,31 +281,43 @@ void Fluid::setupCells() {
         new_cell.k = 1;
       }
 
+      // obstacle
       if (j > size_x / 2 && j < size_x / 2 + 10 && i > size_y / 2 && i < size_y / 2 + 10)
       {
         new_cell.k = 0;
       }      
-
+      // initial vel
       if (j == 1 || j == 0) {
         new_cell.v = initial_velocity;
-        new_cell.s = 1.0;
 			}
+      // smoke
+      if(j == 0 && i > 50 && i < 60) {
+        new_cell.s = 1;
+      }
+
       c.push_back(new_cell);
     }
   }
 }
 
 void Fluid::simulate() {
-  // this->extrapolate();
+  // extrapolate();
   projection();
   advection();
 }
 
 void Fluid::print() {
   std::cout << "Printing data\n";
+  std::cout << "Sim width: " << size_x * h << ", Sim height: " << size_y * h << "\n";
   std::cout << "Size x: " << size_x << ", Size y: " << size_y << "\n";
   std::cout << "Count: " << count << ", h: " << h << ", sc: " << sc << "\n";
   std::cout << "Density: " << density << ", dt: " << dt << "\n";
+}
+
+void Fluid::test() {
+  c[4*size_x].print();
+  c[4*size_x + 1].print();
+  c[4*size_x + 10].print();
 }
 
 Fluid::~Fluid() {}

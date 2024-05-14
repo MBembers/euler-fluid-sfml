@@ -9,7 +9,7 @@ int main()
   int height = 700;
   float ratio = (float)height / (float)width;
   float h = 0.02;
-  float sim_width = 2;
+  float sim_width = 4;
   float sim_height = sim_width * ratio;
   float scale = width / sim_width;
   float framerate = 30.0;
@@ -22,6 +22,8 @@ int main()
   window.setFramerateLimit(framerate);
   // create a clock to track the elapsed time
   sf::Clock clock;
+  sf::Clock total_clock;
+  total_clock.restart();
 
   // run the main loop
   while (window.isOpen())
@@ -41,6 +43,8 @@ int main()
     sf::Time elapsed = clock.restart();
 
     fluid.simulate();
+    // fluid.test();
+
     // drawing stuff
     window.clear(sf::Color::Green);
     sf::Image image;

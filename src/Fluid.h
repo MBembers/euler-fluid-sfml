@@ -51,14 +51,14 @@ private:
   float _h2;
   float dt;
   int sc;
-  int projection_iterations = 30;
-  float initial_velocity = 2.0;
+  int projection_iterations = 40;
+  float initial_velocity = 3.0;
   float overrelaxation = 1.9;
   std::vector<FluidCell> c;
 
   
 public:
-  Fluid(unsigned int size_x, unsigned int size_y, float density, float h, float scale, float dt);
+  Fluid(int size_x, int size_y, float density, float h, float scale, float dt);
   ~Fluid();
 
   void simulate();

@@ -18,19 +18,7 @@ Fluid::Fluid(int size_x, int size_y, float density, float h, float scale, float 
   setupCells();
 }
 
-void Fluid::extrapolate() {
-  for (int i = 0; i < size_y; i++) {
-    c[i * size_x + 0].v = c[i * size_x + 1].v;
-    c[i * size_x + size_x - 1].v =
-      c[i * size_x + size_x - 2].v;
-  }
-  for (int j = 0; j < size_x; j++) {
-    c[0 * size_x + j].u = c[1 * size_x + j].u;
-    c[(size_y - 1) * size_x + j].u =
-      c[(size_y - 2) * size_x + j].u;
-  }
-}
-
+// Projection makes sure that the field is divergence free
 void Fluid::projection() {
   float cp = (density * h) / dt;
 
@@ -138,16 +126,8 @@ void Fluid::advection() {
         y = ((float) i) * h + _h2 - dt * u; 
         c[i * size_x + j].s_new = sampleField(x, y, S);
       }
-      // let vel = this.calcVelocity(i, j);
-      // velSum += vel;
-      // if (vel > this.currMaxVel) this.currMaxVel = vel;
-      // if (!velSum) {
-      //   console.log("error");
-      //   let a;
-      // }
     }
   }
-  // this.avg_vel = velSum / ((size_x - 1) * (size_y - 1));
   for (int i = 0; i < count; i++) {
     c[i].u = c[i].u_new;
     c[i].v = c[i].v_new;
@@ -155,6 +135,7 @@ void Fluid::advection() {
   }
 }
 
+// calculate the approximate value of the field at a given point (between cells)
 float Fluid::sampleField(float x, float y, FieldType fieldType) {
   x = std::max(std::min(x, size_x * h), h);
   y = std::max(std::min(y, size_y * h), h);
@@ -199,7 +180,6 @@ float Fluid::sampleField(float x, float y, FieldType fieldType) {
       w_y1 * w_x0 * c[y1 * size_x + x0].s +
       w_y1 * w_x1 * c[y1 * size_x + x1].s;
   }
-  // std::cout << sample_weighted << "\n";
   return sample_weighted;
 }
 
@@ -213,7 +193,6 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
       float k = c[i * size_x + j].k;
       int colors[3] = {255, 255, 255}; // r, g, b
 
-      // if (scene.showPressure) colors = colorGradient(p, minP, maxP);
       if (k == 0) {
         colors[1] = 100;
         colors[2] = 200;
@@ -231,7 +210,7 @@ void Fluid::get_pixel_array(int width, int height, sf::Uint8* pixels) {
       int x = j * sc; // in pixels
       int y = i * sc; // in pixels
 
-      // process every pixel in a square at position (x,y), square size is h (meters) irl, h * scale on screen (pixels)
+      // process every pixel in a square at position (x,y)
       for (int yp = y; yp < y + sc; yp++) {
         int index = (x + yp * width) * 4;
         for (int xp = x; xp < x + sc; xp++) {
@@ -282,7 +261,6 @@ void Fluid::setupCells() {
 }
 
 void Fluid::simulate() {
-  // extrapolate();
   projection();
   advection();
 }

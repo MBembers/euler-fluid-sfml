@@ -17,16 +17,11 @@ int main()
 
   Fluid fluid((int)std::floor(sim_width / h),(int) std::floor(sim_height / h), 1000, h, scale, dt);
 
-  // create the window
   sf::RenderWindow window(sf::VideoMode(width, height), "Fluid Simulation");
   window.setFramerateLimit(framerate);
-  // create a clock to track the elapsed time
-  sf::Clock clock;
 
-  // run the main loop
   while (window.isOpen())
   {
-    // handle events
     sf::Event event;
     while (window.pollEvent(event))
     {
@@ -34,13 +29,6 @@ int main()
         window.close();
     }
 
-    // make the particle system emitter follow the mouse
-    // sf::Vector2i mouse = sf::Mouse::getPosition(window);
-
-    // update clock
-    sf::Time elapsed = clock.restart();
-
-    // fluid.test();
     fluid.simulate();
 
     // drawing stuff

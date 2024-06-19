@@ -43,3 +43,5 @@ You should have git and Cmake installed on your machine
     cmake -S . -B build
     cmake --build build --config Release
     ```
+
+3. Executable will appear in ./build/bin directory
